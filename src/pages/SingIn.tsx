@@ -1,5 +1,4 @@
-import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -14,7 +13,10 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axios from 'axios';
 import { Alert, Collapse, IconButton } from '@mui/material';
-import CloseIcon  from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/Close';
+import {  useNavigate } from 'react-router-dom';
+
+import { AuthContext } from '../context/AuthContext';
 
 
 const theme = createTheme();
@@ -29,9 +31,12 @@ type UserCheck = {
   password: boolean
 }
 
-// type Token = string;
 
 export default function SignIn() {
+
+  const { setToken } = useContext(AuthContext)
+
+  const [invalidAuth, setInvalidAuth] = useState(false);
 
   const [userAuth, setUserAuth] = useState<UserAuth>({
     username: "",
@@ -46,6 +51,8 @@ export default function SignIn() {
   const [isOk, setIsOk] = useState(false)
 
   const [open, setOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     isAllOk()
@@ -85,7 +92,26 @@ export default function SignIn() {
     event.preventDefault();
     axios.get("http://localhost:8080/auth", {
       auth: userAuth
-    }).then(res => console.log(res.data))
+    }).then(res => {
+
+      console.log("response")
+      console.log(res.data)
+
+      // poner en una funcion setTokenLocalStorage
+      localStorage.setItem( "token", res.data )
+      setToken(res.data)
+      setInvalidAuth( false )
+      navigate('/dashboard')
+
+    }).catch((error) => {
+
+      if (error.response.status === 401) {
+        setInvalidAuth( true )
+        console.log("error.response.status = 401")
+      }
+
+    })
+
 
   }
 
@@ -169,10 +195,19 @@ export default function SignIn() {
                     }
                     sx={{ m: 2 }}
                   >
-                   Please contact the administrator 
+                    Please contact the administrator
                   </Alert>
                 </Collapse>
+
+                {invalidAuth && <Alert
+                  severity='error'
+                  sx={{ m: 2 }}
+                >
+                  Username or password incorrect
+                </Alert>}
+
               </Grid>
+
             </Grid>
           </Box>
         </Box>
