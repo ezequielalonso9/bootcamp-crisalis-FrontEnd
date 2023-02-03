@@ -14,6 +14,8 @@ import { CustomerCompanyById } from "./pages/CustomerCompanyById";
 import { Impuestos } from "./pages/Impuestos";
 import { Producto } from "./pages/Producto";
 import { Productos } from "./pages/Productos";
+import { OrderPage } from "./pages/OrderPage";
+import { OrdersPage } from "./pages/OrdersPage";
 
 const router = createBrowserRouter([
   {
@@ -59,6 +61,14 @@ const router = createBrowserRouter([
       {
         path: "impuestos",
         element: <Impuestos />
+      },
+      {
+        path: "pedido",
+        element: <OrderPage />
+      },
+      {
+        path: "pedidos",
+        element: <OrdersPage />
       }
     ],
   }

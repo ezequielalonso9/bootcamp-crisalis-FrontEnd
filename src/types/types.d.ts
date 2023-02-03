@@ -39,5 +39,15 @@ type Impuesto = {
     valorImpuesto: number
 }
 
+type Prestacion = {
+    "id": number,
+    "nombre": costo,
+    "costo": number,
+    "detalle": string | null,
+    "tipoPrestacion": string,
+    "estado": boolean,
+    "impuestosId": number[]
+}
+
 
 
