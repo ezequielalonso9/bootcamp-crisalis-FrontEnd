@@ -146,6 +146,18 @@ export function Customers() {
                 if (response.status === 200) {
                     rows && setRows(rows.filter((row) => row.id !== id));
                 }
+                if (response.status === 204) {
+                    rows && setRows(rows.map((row) => {
+                        if (row.id === id) {
+                          return {
+                            ...row,
+                            estado: 'false'
+                          }
+                        }
+                        return row
+            
+                      }));
+                }
             })
             .catch((error) => {
 

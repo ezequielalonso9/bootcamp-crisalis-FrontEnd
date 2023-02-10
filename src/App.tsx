@@ -16,6 +16,7 @@ import { Producto } from "./pages/Producto";
 import { Productos } from "./pages/Productos";
 import { OrderPage } from "./pages/OrderPage";
 import { OrdersPage } from "./pages/OrdersPage";
+import { OrderIdPage } from "./pages/OrderIdPage";
 
 const router = createBrowserRouter([
   {
@@ -26,10 +27,6 @@ const router = createBrowserRouter([
     path: "/",
     element: <Layout />,
     children: [
-      {
-        path: "/dashboard",
-        element: <Dashboard />,
-      },
       {
         path:"/clientes",
         element: <Customers />
@@ -69,6 +66,10 @@ const router = createBrowserRouter([
       {
         path: "pedidos",
         element: <OrdersPage />
+      },
+      {
+        path: "pedido/:id",
+        element: <OrderIdPage />
       }
     ],
   }

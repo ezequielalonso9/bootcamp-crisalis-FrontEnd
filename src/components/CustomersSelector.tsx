@@ -115,7 +115,7 @@ export function CustomersSelector({ visible, setVisible, setCliente }: CustomerS
 
         tokenFromStorage.current = token()
 
-        axios.get<Customer[]>("http://localhost:8080/clientes",
+        axios.get<Customer[]>("http://localhost:8080/clientes/activos",
             { headers: { Authorization: `Bearer ${tokenFromStorage.current}` } })
             .then(resp => {
                 console.log(resp.data)

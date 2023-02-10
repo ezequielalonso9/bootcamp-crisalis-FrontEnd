@@ -108,8 +108,22 @@ export function Productos() {
         axios.delete(`http://localhost:8080/prestacion/${id}`,
             { headers: { Authorization: `Bearer ${tokenFromStorage.current}` } })
             .then((response) => {
-                if (response.status === 204) {
+                console.log(response.status)
+                if (response.status === 200) {
                     rows && setRows(rows.filter((row) => row.id !== id));
+                }
+
+                if (response.status === 204) {
+                    rows && setRows(rows.map((row) => {
+                        if (row.id === id) {
+                          return {
+                            ...row,
+                            estado: 'baja'
+                          }
+                        }
+                        return row
+            
+                      }));
                 }
             })
             .catch(errorFetch)

@@ -19,7 +19,7 @@ import Box from '@mui/material/Box';
 
 import { handleToken } from '../hooks/handleToken';
 import Title from '../components/Title';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, FormControlLabel, FormGroup, Grid, Paper, Snackbar, Switch, TextField, Typography } from '@mui/material';
 import Toolbar from '@mui/material/Toolbar';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -58,7 +58,7 @@ export interface ClientePedido {
 const superToken = handleToken().token()
 
 
-export function OrderPage() {
+export function OrderIdPage() {
 
     const [inputValue, setInputValue] = useState({
         prestacion: '',
@@ -102,6 +102,7 @@ export function OrderPage() {
 
     const { token } = handleToken()
     const navigate = useNavigate();
+    const { id } = useParams();
 
 
     const tokenFromStorage = useRef<string | null>()
@@ -119,11 +120,53 @@ export function OrderPage() {
 
         tokenFromStorage.current = token()
 
-        axios.get("http://localhost:8080/prestaciones/activas",
+        axios.get("http://localhost:8080/prestaciones",
             { headers: { Authorization: `Bearer ${tokenFromStorage.current}` } })
             .then(resp => {
                 setRows(resp.data)
                 setDataRows(resp.data)
+            }).catch(errorFetch)
+
+        axios.get<Pedido>(`http://localhost:8080/pedido/${id}`,
+            { headers: { Authorization: `Bearer ${tokenFromStorage.current}` } })
+            .then(resp => {
+                const { lineas, tipoCliente, cliente, estado, ...data } = resp.data
+                setLineas(lineas)
+
+                let nombreCliente = ''
+                const customCliente = {
+                    id: 0,
+                    nombre: nombreCliente,
+                    tipoCliente
+                }
+
+                if (tipoCliente === "Persona") {
+                    const { persona } = cliente
+                    const { nombre, apellido } = persona
+                    nombreCliente = `${nombre} ${apellido}`
+                    customCliente.nombre = nombreCliente
+                    customCliente.id = persona.dni
+                }
+                if (cliente.empresa !== null) {
+                    nombreCliente = cliente.empresa.razonSocial;
+                    customCliente.nombre = nombreCliente
+                    customCliente.id = cliente.empresa.cuit
+                }
+
+                setCliente(customCliente)
+                setResumenPedido({
+                    subTotalPedido: `${data.subTotalPedido}`,
+                    totalImpuestoIva: `${data.totalImpuestoIva}`,
+                    totalImpuestoIbb: `${data.totalImpuestoIbb}`,
+                    totalOtrosImpuestos: `${data.totalOtrosImpuestos}`,
+                    descuentoTotal: `${data.descuentoTotal}`,
+                    totalPedido: `${data.totalPedido}`
+                })
+                setIdPedido(`${data.id}`)
+                estado && setInputValue({
+                    ...inputValue,
+                    ['estado']: estado
+                })
             }).catch(errorFetch)
     }, [])
 
@@ -257,7 +300,7 @@ export function OrderPage() {
                         })
                     }
                 })
-        } else if(idPedido !== '' && !updateStado){
+        } else if (idPedido !== '' && !updateStado) {
             axios.post<Pedido>(`http://localhost:8080/pedido/${idPedido}/linea`,
                 body,
                 { headers: { Authorization: `Bearer ${token()}` } })
@@ -286,39 +329,39 @@ export function OrderPage() {
                         })
                     }
                 })
-        } else{
+        } else {
 
             const body = {
                 cantidadPrestacion: cantidad,
-                añosGarantia 
+                añosGarantia
             }
 
             axios.put<Pedido>(`http://localhost:8080/pedido/${idPedido}/linea/${lineaId}`,
-            body,
-            { headers: { Authorization: `Bearer ${token()}` } })
-            .then((resp) => {
+                body,
+                { headers: { Authorization: `Bearer ${token()}` } })
+                .then((resp) => {
 
-                if (resp.status === 200) {
-                    const { linea, lineas,...data } = resp.data
-                    setLineas(lineas)
-                    setResumenPedido({
-                        subTotalPedido: `${data.subTotalPedido}`,
-                        totalImpuestoIva: `${data.totalImpuestoIva}`,
-                        totalImpuestoIbb: `${data.totalImpuestoIbb}`,
-                        totalOtrosImpuestos: `${data.totalOtrosImpuestos}`,
-                        descuentoTotal: `${data.descuentoTotal}`,
-                        totalPedido: `${data.totalPedido}`
-                    })
-                    setUpdateStado(false)
-                }
+                    if (resp.status === 200) {
+                        const { linea, lineas, ...data } = resp.data
+                        setLineas(lineas)
+                        setResumenPedido({
+                            subTotalPedido: `${data.subTotalPedido}`,
+                            totalImpuestoIva: `${data.totalImpuestoIva}`,
+                            totalImpuestoIbb: `${data.totalImpuestoIbb}`,
+                            totalOtrosImpuestos: `${data.totalOtrosImpuestos}`,
+                            descuentoTotal: `${data.descuentoTotal}`,
+                            totalPedido: `${data.totalPedido}`
+                        })
+                        setUpdateStado(false)
+                    }
 
-            }).catch((error) => {
-                if (error.response.status === 401) {
-                    navigate('/singIn', {
-                        replace: true
-                    })
-                }
-            })
+                }).catch((error) => {
+                    if (error.response.status === 401) {
+                        navigate('/singIn', {
+                            replace: true
+                        })
+                    }
+                })
 
         }
 
@@ -347,6 +390,13 @@ export function OrderPage() {
                     if (error.response.status === 401) {
                         navigate('/singIn', {
                             replace: true
+                        })
+                    }
+                    if (error.response.status === 400) {
+
+                        setInputValue({
+                            ...inputValue,
+                            [e.target.name]: false
                         })
                     }
 
@@ -536,8 +586,8 @@ export function OrderPage() {
 
                             </Box>
 
-                            <Order 
-                                lineas={lineas} 
+                            <Order
+                                lineas={lineas}
                                 idPedido={idPedido}
                                 setLineas={setLineas}
                                 setOpenError={setOpenError}
@@ -610,7 +660,7 @@ export function OrderPage() {
                                             </Grid>
                                             <Grid item xs={6} md={6} lg={6}>
                                                 <TextField
-                                                    disabled = {updateStado}
+                                                    disabled={updateStado}
                                                     id="date"
                                                     label="date"
                                                     type="date"
@@ -634,7 +684,7 @@ export function OrderPage() {
                                             variant="contained"
                                             sx={{ mt: 3, mb: 2 }}
                                         >
-                                            { updateStado ? 'Actualizar Linea': 'Cargar Linea'}
+                                            {updateStado ? 'Actualizar Linea' : 'Cargar Linea'}
                                         </Button>
                                     </Box>
                                 </Paper>
@@ -665,7 +715,7 @@ export function OrderPage() {
                                                 components={{
                                                     Toolbar: CustomToolbar,
                                                 }}
-                                                disableSelectionOnClick = {updateStado}
+                                                disableSelectionOnClick={updateStado}
                                             />}
                                         </Box>
                                     </Box>

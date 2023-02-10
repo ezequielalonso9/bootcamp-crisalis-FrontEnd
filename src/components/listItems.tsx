@@ -4,7 +4,6 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import BalanceIcon from '@mui/icons-material/Balance';
-import BarChartIcon from '@mui/icons-material/BarChart';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PersonIcon from '@mui/icons-material/Person';
 import WidgetsIcon from '@mui/icons-material/Widgets';
@@ -91,33 +90,6 @@ export const mainListItems = (
       </NavLink>
     </Tooltip>
 
-
-
-
-    <Tooltip title="Reportes" placement="right" arrow>
-      <NavLink
-        to={`/reportes`}
-        style={linkStyle}
-
-      >
-        <ListItemButton>
-          <ListItemIcon>
-            <BarChartIcon />
-          </ListItemIcon>
-          <ListItemText primary="Reportes" />
-        </ListItemButton>
-      </NavLink>
-    </Tooltip>
-
-
-
-
-    {/*     <ListItemButton>
-      <ListItemIcon>
-        <PeopleIcon />
-      </ListItemIcon>
-      <ListItemText primary="Usuarios" />
-    </ListItemButton> */}
   </React.Fragment>
 );
 

@@ -15,17 +15,23 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@mui/material';
 
 
-type Color = 'success' | 'error' | 'info' | 'warning'
-type KeyColor = 'true' | 'false' | 'persona' | 'empresa'
+type Color = 'success' | 'error' | 'info'
+type KeyColor = 'Activo' | 'Baja' | 'Presupuesto'
 type SetColor = { [key in KeyColor]: Color };
 type CustomChipProps = { value: KeyColor }
-type Row = { estado: string; id: number; nombre: string; tipoCliente: string }
+type Row = {
+  id: number;
+  cliente: string;
+  estado: string;
+  fechaPedido: Date | null;
+  fechaUltimaModificacion: Date | null;
+  totalPedido: number;
+}
 
 const COLOR_CHIP: SetColor = {
-  'true': 'success',
-  'false': 'error',
-  'persona': 'info',
-  'empresa': 'warning'
+  'Activo': 'success',
+  'Baja': 'error',
+  'Presupuesto': 'info',
 }
 
 const setColor = (value: KeyColor): Color => {
@@ -39,39 +45,50 @@ const CustomChip = ({ value }: CustomChipProps) => {
 
 
 
-const customersToRowsCustomer = (customers: Customer[]) => {
+const pedidosToRows = (pedidos: Pedido[]) => {
   const rows: Row[] = []
-  customers.forEach(customer => {
-    let row = customerToRow(customer)
+  pedidos.forEach(pedido => {
+    let row = pedidoToRow(pedido)
     rows.push(row)
   })
   return rows
 }
 
-const customerToRow = (customer: Customer) => {
-  if (customer.empresa === null) {
-    return rowPersona(customer.persona, customer.estado)
+const pedidoToRow = (pedido: Pedido) => {
+
+  const { tipoCliente, cliente, id, fechaPedido, fechaUltimaModificacion, totalPedido, estado } = pedido
+  let nombreCliente = ''
+
+  if (tipoCliente === "Persona") {
+    const { persona } = cliente
+    const { nombre, apellido } = persona
+    nombreCliente = `${nombre} ${apellido}`
   }
-  return rowEmpresa(customer.empresa, customer.estado)
+  if (cliente.empresa !== null) {
+    nombreCliente = cliente.empresa.razonSocial;
+  }
+
+  let estadoPedido = 'Activo'
+  if (estado === false) {
+    estadoPedido = 'Baja'
+  }
+  if (estado === null) {
+    estadoPedido = 'Presupuesto'
+  }
+
+
+
+  return {
+    id,
+    cliente: nombreCliente,
+    estado: estadoPedido,
+    fechaPedido,
+    fechaUltimaModificacion,
+    totalPedido
+  }
+
 }
 
-const rowPersona = (persona: Persona, estado: boolean): Row => {
-  return {
-    estado: estado ? 'true' : 'false',
-    id: persona.dni,
-    nombre: `${persona.nombre} ${persona.apellido}`,
-    tipoCliente: 'persona'
-  }
-}
-
-const rowEmpresa = (empresa: Empresa, estado: boolean): Row => {
-  return {
-    estado: estado ? 'true' : 'false',
-    id: empresa.cuit,
-    nombre: empresa.razonSocial,
-    tipoCliente: 'empresa'
-  }
-}
 
 function CustomToolbar() {
 
@@ -112,11 +129,11 @@ export function OrdersPage() {
 
     tokenFromStorage.current = token()
 
-    axios.get<Customer[]>("http://localhost:8080/clientes",
+    axios.get("http://localhost:8080/pedidos",
       { headers: { Authorization: `Bearer ${tokenFromStorage.current}` } })
       .then(resp => {
         console.log(resp.data)
-        setRows(customersToRowsCustomer(resp.data))
+        setRows(pedidosToRows(resp.data))
       }).catch((error) => {
 
         if (error.response.status === 401) {
@@ -130,21 +147,28 @@ export function OrdersPage() {
   }, [])
 
   const handleDelete = (params: GridRowParams) => {
-    const { id, tipoCliente } = params.row
+    const { id } = params.row
 
 
-    let url = 'persona'
-
-    if (tipoCliente === 'empresa') {
-      url = 'empresa'
-    }
-
-    axios.delete(`http://localhost:8080/cliente/${url}/${id}`,
+    axios.delete(`http://localhost:8080/pedido/${id}`,
       { headers: { Authorization: `Bearer ${tokenFromStorage.current}` } })
       .then((response) => {
         console.log(response)
         if (response.status === 200) {
           rows && setRows(rows.filter((row) => row.id !== id));
+        }
+
+        if (response.status === 202) {
+          rows && setRows(rows.map((row) => {
+            if (row.id === id) {
+              return {
+                ...row,
+                estado: 'Baja'
+              }
+            }
+            return row
+
+          }));
         }
       })
       .catch((error) => {
@@ -160,26 +184,32 @@ export function OrdersPage() {
 
   const handleEdit = (params: GridRowParams) => {
 
-    const { id, tipoCliente } = params.row
+    const { id } = params.row
 
-    let url = 'persona'
-
-    if (tipoCliente === 'empresa') {
-      url = 'empresa'
-    }
-
-    navigate(`/cliente/${url}/${id}`)
+    navigate(`/pedido/${id}`)
   }
+
+
 
   const columns: GridEnrichedColDef[] = [
     { field: 'id', headerName: '#Pedido', flex: 1 },
     { field: 'cliente', headerName: 'Cliente', flex: 1 },
     {
-      field: 'fecha', headerName: 'Fecha', flex: 1,
+      field: 'fechaPedido', headerName: 'Fecha', flex: 1,
       type: 'date',
+      valueFormatter: (params) => {
+        return params.value ? (new Date(params.value)).toLocaleString() : '';
+      }
     },
+    // {
+    //   field: 'fehcaUltimaModificacion', headerName: 'Fecha ult. modificacion', flex: 1,
+    //   type: 'date',
+    //   valueFormatter: (params) => {
+    //     return params.value ? (new Date(params.value)).toLocaleDateString() : '';
+    //   }
+    // },
     {
-      field: 'monto',
+      field: 'totalPedido',
       headerName: 'Monto total',
       headerAlign: 'center',
       flex: 1,

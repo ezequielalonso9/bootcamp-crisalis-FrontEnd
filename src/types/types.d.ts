@@ -36,7 +36,8 @@ type Cliente = {
 type Impuesto = {
     id: number,
     nombreImpuesto: string,
-    valorImpuesto: number
+    valorImpuesto: number,
+    valorAdicional: number
 }
 
 type Prestacion = {
@@ -47,6 +48,43 @@ type Prestacion = {
     "tipoPrestacion": string,
     "estado": boolean,
     "impuestosId": number[]
+}
+
+type Linea = {
+    id: number,
+    idPrestacion: number,
+    nombrePrestacion: string,
+    tipoPrestacion: 'Servicio' | 'Producto',
+    cantidadPrestacion: number,
+    costoUnitarioPrestacion: number,
+    costoUnitarioGarantia: number,
+    costoUnitarioSoporte: number,
+    costoAdicionalGarantia: number,
+    cargoAdicionalSoporte: number,
+    añosGarantia: number | null
+    fecha: Date | null,
+    fechaUltimaModificacion: Date | null,
+    descuento: number,
+    costoTotalLinea: number,
+    impuestos: Impuesto[]
+
+}
+
+type Pedido = {
+    id: number,
+    tipoCliente: "Persona" | "Empresa",
+    estado: null | boolean,
+    fechaPedido: Date | null,
+    fechaUltimaModificacion: Date | null,
+    linea: Linea,
+    lineas: Linea[],
+    subTotalPedido: number,
+    totalImpuestoIva: number,
+    totalImpuestoIbb: number,
+    totalOtrosImpuestos: null,
+    descuentoTotal: number,
+    totalPedido: number
+    cliente: Cliente
 }
 
 
